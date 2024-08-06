@@ -1,1 +1,38 @@
 @import "bootstrap";
+
+body {
+  background-color: #f8f9fa;
+}
+
+#new-task-form {
+  .form-control {
+    border-radius: 0;
+  }
+
+  .btn-primary {
+    border-radius: 0;
+  }
+}
+
+#tasks, #completed-tasks {
+  .list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .task-text {
+    flex-grow: 1;
+    margin-right: 10px;
+  }
+
+  .btn-group {
+    .btn {
+      margin-left: 5px;
+    }
+  }
+}
+
+.completed {
+  text-decoration: line-through;
+}
