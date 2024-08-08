@@ -36,3 +36,9 @@ body {
 .completed {
   text-decoration: line-through;
 }
+
+#show-active-tasks.active,
+#show-completed-tasks.active {
+  background-color: #d3d3d3;
+  color: #000;
+}
