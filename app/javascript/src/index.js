@@ -1,5 +1,4 @@
 import $ from 'jquery';
-
 import {
   indexTasks,
   postTask,
@@ -13,6 +12,8 @@ indexTasks(function (response) {
   });
 
   $("#tasks").html(htmlString);
+}, function (error) {
+  console.error("Failed to load tasks:", error);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,8 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const taskText = newTaskInput.value.trim();
     if (taskText) {
-      addTask(taskText);
-      newTaskInput.value = '';
+      postTask(taskText, function(response) {
+        addTaskToList(response.task);
+        newTaskInput.value = '';
+      }, function (error) {
+        console.error("Failed to create task:", error);
+      });
     }
   });
 
@@ -42,32 +47,32 @@ document.addEventListener('DOMContentLoaded', () => {
     tasksList.classList.add('d-none');
   });
 
-  function addTask(text) {
+  function addTaskToList(task) {
     const taskItem = document.createElement('li');
     taskItem.className = 'list-group-item';
-    
+    taskItem.dataset.id = task.id;
+
     const taskText = document.createElement('span');
     taskText.className = 'task-text';
-    taskText.textContent = text;
-    
+    taskText.textContent = task.content;
+
     const btnGroup = document.createElement('div');
     btnGroup.className = 'btn-group';
-    
+
     const completeBtn = document.createElement('button');
     completeBtn.className = 'btn btn-success btn-sm';
     completeBtn.textContent = 'Complete';
     completeBtn.addEventListener('click', () => {
-      taskItem.remove();
-      completeTask(taskText.textContent);
+      completeTask(task.id, taskText, taskItem);
     });
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn btn-danger btn-sm';
     deleteBtn.textContent = 'Delete';
     deleteBtn.addEventListener('click', () => {
-      taskItem.remove();
+      deleteTask(task.id, taskItem);
     });
-    
+
     btnGroup.appendChild(completeBtn);
     btnGroup.appendChild(deleteBtn);
     taskItem.appendChild(taskText);
@@ -75,9 +80,24 @@ document.addEventListener('DOMContentLoaded', () => {
     tasksList.appendChild(taskItem);
   }
 
-  function completeTask(text) {
+  function completeTask(taskId, taskText, taskItem) {
+    $.ajax({
+      type: 'PUT',
+      url: `api/tasks/${taskId}/mark_complete?api_key=1`,
+      success: function() {
+        taskItem.remove();
+        addCompletedTaskToList(taskText.textContent, taskId);
+      },
+      error: function(error) {
+        console.error("Failed to complete task:", error);
+      }
+    });
+  }
+
+  function addCompletedTaskToList(text, id) {
     const taskItem = document.createElement('li');
     taskItem.className = 'list-group-item';
+    taskItem.dataset.id = id;
 
     const taskText = document.createElement('span');
     taskText.className = 'task-text completed';
@@ -90,12 +110,25 @@ document.addEventListener('DOMContentLoaded', () => {
     deleteBtn.className = 'btn btn-danger btn-sm';
     deleteBtn.textContent = 'Delete';
     deleteBtn.addEventListener('click', () => {
-      taskItem.remove();
+      deleteTask(id, taskItem);
     });
 
     btnGroup.appendChild(deleteBtn);
     taskItem.appendChild(taskText);
     taskItem.appendChild(btnGroup);
     completedTasksList.appendChild(taskItem);
+  }
+
+  function deleteTask(taskId, taskItem) {
+    $.ajax({
+      type: 'DELETE',
+      url: `api/tasks/${taskId}?api_key=1`,
+      success: function() {
+        taskItem.remove();
+      },
+      error: function(error) {
+        console.error("Failed to delete task:", error);
+      }
+    });
   }
 });
